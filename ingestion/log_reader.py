@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 
+
 def parse_log_line(line):
     """
     Parses HDFS log line into structured format
@@ -17,11 +18,12 @@ def parse_log_line(line):
     # Convert timestamp
     try:
         timestamp = datetime.strptime(date_str + time_str, "%y%m%d%H%M%S")
-    except:
+    except Exception as e:
+        print(f"[Timestamp Error] {e} | Line: {line}")
         return None
 
     return {
-        "timestamp": timestamp.isoformat(),  # keep readable for now
+        "timestamp": timestamp.isoformat(),  # readable format
         "pid": int(pid),
         "level": level,
         "component": component,
@@ -31,15 +33,20 @@ def parse_log_line(line):
 
 def read_logs(file_path):
     """
-    Reads log file and returns structured events
+    Generator function(memory efficient)
     """
 
-    events = []
-
     with open(file_path, "r") as f:
-        for line in f:
-            parsed = parse_log_line(line.strip())
-            if parsed:
-                events.append(parsed)
+        for line_no, line in enumerate(f, 1):
+            line = line.strip()
 
-    return events
+            if not line:
+                continue
+
+            parsed = parse_log_line(line)
+
+            if parsed:
+                yield parsed
+            else:
+                # Debugging visibility (can be removed later)
+                print(f"[Skipped Line {line_no}] {line}")

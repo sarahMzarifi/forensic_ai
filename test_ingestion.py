@@ -1,7 +1,6 @@
 from ingestion.pcap_reader import read_pcap
-from processing.pcap_normaliser import normalize_pcap
+from processing.pcap_normaliser import normalize_pcaps
 import os
-import json
 
 
 def get_file_path():
@@ -20,21 +19,26 @@ if not os.path.exists(file_path):
     exit()
 
 
-# Step 1: Read packets
+# Step 1: Read packets (generator)
 packets = read_pcap(file_path)
-print(f"Total packets: {len(packets)}")
 
 
-# Step 2: Normalize packets
-normalized_packets = []
-
-for pkt in packets:
-    normalized_packets.append(normalize_pcap(pkt))
+# Step 2: Normalize packets (generator pipeline)
+normalized_stream = normalize_pcaps(packets)
 
 
-print(f"Total normalized packets: {len(normalized_packets)}")
+# Step 3: Debug print first 5 events
+print("\nSample normalized packets:\n")
+
+count = 0
+total = 0
+
+for event in normalized_stream:
+    if count < 5:
+        print(event)
+        count += 1
+
+    total += 1
 
 
-# Step 3: Print sample normalized output
-for event in normalized_packets[:5]:
-    print(event)
+print(f"\nTotal normalized packets: {total}")
