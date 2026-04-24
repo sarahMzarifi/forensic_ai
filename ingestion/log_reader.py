@@ -4,16 +4,20 @@ from datetime import datetime
 
 def parse_log_line(line):
     """
-    Parses HDFS log line into structured format
+    Parses HDFS log line into structured format (robust version)
     """
 
-    pattern = r"(\d{6}) (\d{6}) (\d+) (\w+) ([\w\.$]+): (.*)"
+    # 🔥 More flexible pattern
+    pattern = r"^(\d{6})\s+(\d{6})\s+(\d+)\s+(\w+)\s+(.+?):\s+(.*)$"
 
     match = re.match(pattern, line)
     if not match:
         return None
 
     date_str, time_str, pid, level, component, message = match.groups()
+
+    # Clean component (extra safety)
+    component = component.strip()
 
     # Convert timestamp
     try:
@@ -23,17 +27,17 @@ def parse_log_line(line):
         return None
 
     return {
-        "timestamp": timestamp.isoformat(),  # readable format
+        "timestamp": timestamp.isoformat(),
         "pid": int(pid),
         "level": level,
         "component": component,
-        "message": message
+        "message": message.strip()
     }
 
 
 def read_logs(file_path):
     """
-    Generator function(memory efficient)
+    Generator function (memory efficient)
     """
 
     with open(file_path, "r") as f:
@@ -48,5 +52,4 @@ def read_logs(file_path):
             if parsed:
                 yield parsed
             else:
-                # Debugging visibility (can be removed later)
                 print(f"[Skipped Line {line_no}] {line}")

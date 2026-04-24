@@ -17,6 +17,11 @@ headers = [
     "timestamp",
     "source",
     "event",
+    "event_type",
+    "entity_type",
+    "time_bucket",
+    "size_category",
+    "log_ip",            # 🔥 NEW FIELD
     "destination",
     "src_port",
     "dst_port",
@@ -38,6 +43,13 @@ with open(output_file, "w", newline="") as f:
             "timestamp": event.get("timestamp"),
             "source": event.get("source"),
             "event": event.get("event"),
+
+            # 🔥 FEATURE FIELDS
+            "event_type": event.get("event_type"),
+            "entity_type": event.get("entity_type"),
+            "time_bucket": event.get("time_bucket"),
+            "size_category": event.get("size_category"),
+            "log_ip": event.get("log_ip"),   # 🔥 ADDED
 
             # PCAP fields
             "destination": event.get("metadata", {}).get("destination"),

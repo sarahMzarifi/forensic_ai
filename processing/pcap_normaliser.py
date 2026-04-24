@@ -1,13 +1,48 @@
-def normalize_pcap(pkt):
+def extract_size_category(length):
     """
-    Normalize a single packet into common schema
+    Categorize packet size
+    """
+
+    if length < 100:
+        return "small"
+    elif length < 500:
+        return "medium"
+    else:
+        return "large"
+
+
+def extract_time_bucket(timestamp):
+    """
+    Extract hour bucket from UNIX timestamp
     """
 
     try:
+        from datetime import datetime
+        dt = datetime.fromtimestamp(timestamp)
+        return dt.strftime("%H")
+    except:
+        return None
+
+
+def normalize_pcap(pkt):
+    """
+    Normalize a single packet into enriched schema
+    """
+
+    try:
+        protocol = pkt.get("protocol")
+
         return {
             "timestamp": pkt["timestamp"],
             "source": pkt["src_ip"],
-            "event": f"{pkt['protocol']} connection" if pkt["protocol"] else "network activity",
+            "event": f"{protocol} connection" if protocol else "network activity",
+
+            # 🔥 NEW FEATURES
+            "event_type": "connection" if protocol else "network_activity",
+            "entity_type": "ip",
+            "time_bucket": extract_time_bucket(pkt["timestamp"]),
+            "size_category": extract_size_category(pkt["length"]),
+
             "metadata": {
                 "destination": pkt["dst_ip"],
                 "src_port": pkt["src_port"],
